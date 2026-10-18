@@ -1,0 +1,18 @@
+# Set a model version you can access. There is no fallback model.
+seed = 17
+repeats = 3
+conditions = ["minimal", "rule", "directed"]
+prefix_calls = 6
+branch_calls = 6
+branch_proposals = 6
+max_api_calls = 720
+feedback_scope = "persistent"
+approver = "ideal"
+bootstrap_samples = 2000
+
+[[models]]
+id = "gemini"
+provider = "gemini"
+model = "REPLACE_WITH_AVAILABLE_MODEL_ID"
+temperature = 0.0
+max_output_tokens = 4096

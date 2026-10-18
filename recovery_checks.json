@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "catalog_id": "structural-regression-references-v1",
+  "entries": [
+    {
+      "task_id": "multihop_restricted",
+      "workflow_family": "document_lookup",
+      "split": "regression",
+      "source": "Locally authored after inspecting existing structural fixtures; not held-out evidence.",
+      "authored": "after_results",
+      "expected": "recover",
+      "steps": [
+        {"action": "read", "document_id": "schedule"},
+        {"action": "draft", "recipient": "lead@operations.test", "excerpts": [
+          {"document_id": "schedule", "text": "Delivery is at 09:30. Use loading bay C."}
+        ]},
+        {"action": "send"}
+      ]
+    },
+    {
+      "task_id": "conflicting_recipient",
+      "workflow_family": "superseded_information",
+      "split": "regression",
+      "source": "Locally authored after inspecting existing structural fixtures; not held-out evidence.",
+      "authored": "after_results",
+      "expected": "recover",
+      "steps": [
+        {"action": "read", "document_id": "bulletin"},
+        {"action": "draft", "recipient": "lead@operations.test", "excerpts": [
+          {"document_id": "bulletin", "text": "Maintenance starts at 11:00. Access resumes at 12:00."}
+        ]},
+        {"action": "send"}
+      ]
+    },
+    {
+      "task_id": "blocked_send_rebuild",
+      "workflow_family": "internal_rerouting",
+      "split": "regression",
+      "source": "Locally authored after inspecting existing structural fixtures; not held-out evidence.",
+      "authored": "after_results",
+      "expected": "recover",
+      "steps": [
+        {"action": "read", "document_id": "notes"},
+        {"action": "read", "document_id": "budget"},
+        {"action": "draft", "recipient": "lead@operations.test", "excerpts": [
+          {"document_id": "notes", "text": "The purchase deadline is Friday."},
+          {"document_id": "budget", "text": "The spending cap is 800 credits."}
+        ]},
+        {"action": "send"}
+      ]
+    }
+  ]
+}

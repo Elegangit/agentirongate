@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Inspect matched continuations from a saved agent-security experiment.">
+  <title>Research viewer</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand"><span class="mark" aria-hidden="true">G</span><div><h1 id="project">Research viewer</h1><p>AFTER THE GATE SAYS NO</p></div></div>
+    <div class="header-actions"><span class="pill">Research workspace · read-only</span><button id="focus" aria-pressed="false">Presentation view</button></div>
+  </header>
+  <main>
+    <div id="error" role="alert" hidden></div>
+    <section class="intro"><div><p class="eyebrow">CONTROLLED AGENT EVALUATION</p><h2>After the gate says no.</h2><p class="muted">One shared checkpoint. Independent continuations. A fixed policy.</p></div><div id="run-meta" class="run-meta">Loading run…</div></section>
+    <p id="evidence" class="notice" role="status"></p>
+    <section id="overview" class="overview" aria-label="Recorded run overview"></section>
+    <section class="controls" aria-label="Choose a recorded comparison">
+      <label>Find a task<input id="search" type="search" placeholder="Search task or prompt…"></label>
+      <label>Task family<select id="family"><option value="">All families</option></select></label>
+      <label>Task<select id="task"></select></label>
+      <label>Model<select id="model"></select></label>
+      <label>Repeat<select id="repeat"></select></label>
+    </section>
+    <p id="filter-status" class="muted" aria-live="polite"></p>
+    <div id="workspace">
+    <section class="checkpoint panel">
+      <div class="section-heading"><h2><span class="number">01</span> Shared starting point</h2><div class="buttons"><span class="pill">Policy locked</span><button id="copy-hash">Copy checkpoint ID</button></div></div>
+      <p id="task-prompt" class="prompt"></p>
+      <div id="checkpoint"></div>
+      <details id="prefix-details"><summary>Inspect the shared prefix and policy</summary><div class="inspector-grid"><div id="prefix-events"></div><div><p class="small-label">FIXED POLICY · RAW CONFIGURATION</p><pre id="policy"></pre></div></div></details>
+    </section>
+    <section aria-labelledby="branches-heading">
+      <div class="section-heading branch-heading"><h2 id="branches-heading"><span class="number">02</span> Compare continuations</h2><div class="buttons"><button id="export">Export this comparison</button><button id="restart">Restart</button><button id="back">Previous</button><button id="play" aria-pressed="false">Play</button><button id="next" class="primary">Next recorded step</button><button id="all">Show all</button></div></div>
+      <div class="scrubber"><label for="step">Recorded action step</label><input id="step" type="range" min="0" max="0" value="0"><output id="step-value" for="step">0 / 0</output></div>
+      <p id="progress" class="muted" aria-live="polite"></p>
+      <div id="branches" class="branches"></div>
+    </section>
+    <section class="panel outcomes" aria-labelledby="outcomes-heading">
+      <div class="section-heading"><h2 id="outcomes-heading"><span class="number">03</span> Recorded final outcomes</h2><label class="toggle"><input type="checkbox" id="differences"> Show differences from Minimal</label></div>
+      <p class="muted">These scores describe the completed branches, not the current playback step. One repeat is not an aggregate research finding.</p>
+      <div class="table-scroll"><table id="metrics"></table></div>
+    </section>
+    </div>
+    <details class="panel protocol" id="protocol"><summary>Experiment protocol &amp; reading guide</summary><div class="inspector-grid"><div><h3>What is held fixed?</h3><p>The checkpoint, model configuration, trusted policy, approval strategy and continuation budgets. Only the assigned denial feedback changes.</p><h3>What do the scores mean?</h3><p>Completion checks the legitimate task. Prohibited proposals count further forbidden requests. Unauthorized effects record forbidden actions that actually executed. Approval alone does not establish completion.</p></div><div><h3>What is this page showing?</h3><p>A saved experiment, not live model activity. Playback reveals recorded tool events; model turns with no tool event appear in the call count and termination status.</p><h3>How should I compare branches?</h3><p>Columns align by action index, not elapsed time. Difference values compare this task and repeat only. Use the Python analysis for task-weighted estimates and uncertainty.</p><p><strong>Keyboard:</strong> Left / Right arrows step through the record when you are not editing a control.</p></div></div></details>
+    <p id="announcement" class="announcement" role="status" aria-live="polite"></p>
+    <footer><strong>The model proposes. The policy decides.</strong><p>Python runner → saved checkpoint → feedback branches → independent scorer → this viewer</p><p id="settings"></p><p>All tool effects are simulated. This page reads saved evidence; it does not call a model, send email, or edit permissions.</p></footer>
+  </main>
+</body>
+</html>
