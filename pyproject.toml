@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gatebench"
+version = "0.1.0"
+description = "Reproducible post-denial agent experiments"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+live = ["httpx>=0.27,<1"]
+plots = ["matplotlib>=3.8,<4"]
+dev = ["pytest>=8,<10", "ruff>=0.6,<1"]
+
+[project.scripts]
+gatebench = "gatebench.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"gatebench.viewer" = ["static/*.html", "static/*.css", "static/*.js"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

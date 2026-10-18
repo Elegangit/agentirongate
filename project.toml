@@ -1,0 +1,10 @@
+[project]
+name = "AgentIronGate"
+slug = "agentirongate"
+paper_title = "A Controlled Study Design for Denial Feedback in Tool-Using AI Agents"
+description = "A controlled research sandbox for what agents do after a denied action."
+# Set this to the repository URL after publishing.
+repository = ""
+version = "0.1.0"
+authors = ["Aniqa Afzal", "Safayat Bin Hakim"]
+maintainer_github = "https://github.com/Elegangit"

@@ -1,0 +1,13 @@
+name: agentgate
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools>=68
+  - pytest>=8
+  - httpx>=0.27
+  - matplotlib>=3.8
+  - ruff
+  - pip:
+      - -e .

@@ -1,0 +1,114 @@
+# Python caches and compiled files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pytype/
+.hypothesis/
+
+# Coverage and test reports
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+
+# Build output
+*.egg-info/
+build/
+dist/
+.eggs/
+node_modules/
+.firebase/
+playwright-report/
+test-results/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Local environments (keep environment.yml and pyproject.toml)
+.venv/
+venv/
+env/
+.conda/
+.tox/
+.nox/
+.python-version
+
+# Credentials: filename rules are a precaution, not a secret scanner.
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ed25519
+credentials*.json
+service-account*.json
+service_account*.json
+client_secret*.json
+.netrc
+.npmrc
+.pypirc
+/.aws/
+/.azure/
+/secrets/
+
+# Generated runs and machine-specific validation reports
+outputs/
+/annotation-app/
+validation/local/
+PRIVATE_mapping.json
+rater_cases.json
+ratings*.csv
+practice-ratings*.csv
+adjudication*.csv
+*-backup.json
+
+# Local planning and review records
+# Only these three Markdown documents belong in the published codebase.
+*.[mM][dD]
+!/README.md
+!/docs/protocol.md
+!/docs/scoring-audit.md
+/CITATION.cff
+/.github/ISSUE_TEMPLATE/
+/.github/pull_request_template.md
+/implementation_steps.txt
+/validation/latest.json
+/validation/review_prompt.txt
+/validation/rereview_prompt.txt
+/validation/claude_review.md
+/validation/review_resolution.md
+/validation/rereview_fix_cycles.txt
+/validation/run_review.py
+/validation/run_rereview.py
+
+# Editor leftovers and local tooling
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej
+*.log
+.ipynb_checkpoints/
+/.cache/
+/tmp/
+/temp/
+/.claude/
+/.codex/
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Keep text, JSON and other source assets unless explicitly excluded above.
+# To publish another Markdown file, add an exception beside the three above.
+# Already tracked files are NOT protected by these rules. git add -f bypasses them.
