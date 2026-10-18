@@ -89,5 +89,3 @@ This updates the identity block above without replacing the rest of the README.
 ## License
 
 [MIT](LICENSE), including the synthetic task fixtures.
-
-Maintained by [Aniqa Afzal](https://github.com/Elegangit).
