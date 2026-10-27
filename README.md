@@ -63,6 +63,23 @@ python -m gatebench run --config configs/gemini.toml \
 python -m gatebench analyze outputs/gemini-pilot
 ```
 
+## OpenRouter runs
+
+`configs/openrouter.toml` runs the five-repeat pilot on DeepSeek V4 Flash and Gemini 2.5 Flash
+through OpenRouter. Supply `OPENROUTER_API_KEY` through your shell. Requests require
+backends that honor tools and sampling settings; the serving backend is recorded with
+each turn, so mixed routing is flagged in the model-version report.
+
+```bash
+python -m gatebench preflight --config configs/openrouter.toml \
+  --freeze outputs/plans/attack-openrouter.json --study-id attack-pilot-openrouter
+python -m gatebench run --config configs/openrouter.toml \
+  --plan outputs/plans/attack-openrouter.json --allow-network --output outputs/attack-pilot-openrouter
+```
+
+Add `--tasks data/benign.json` to both commands, with a separate plan and output, for
+the benign run.
+
 Read the [experiment protocol](docs/protocol.md) before collecting results.
 For a planned study, use `preflight` to check and freeze settings, then pass
 the saved plan to `run --plan`. Plans bind research code, settings, tasks, and
