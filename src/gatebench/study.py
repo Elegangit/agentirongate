@@ -80,7 +80,7 @@ def preflight(cfg, dataset, *, mode="confirmatory", plan=None, root=None, catalo
     providers = {m["provider"] for m in cfg["models"]}
     if len(providers) != 1:
         errors.append("Do not mix offline and live providers")
-    live = "gemini" in providers
+    live = bool(providers - {"offline"})
     if live:
         for model in cfg["models"]:
             if "REPLACE" in model["model"].upper():

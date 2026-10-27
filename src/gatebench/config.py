@@ -44,7 +44,7 @@ def load_config(path):
         if not re.fullmatch(r"[a-zA-Z0-9_-]+", model["id"]) or model["id"] in ids:
             raise ValueError("Model IDs must be unique safe identifiers")
         ids.add(model["id"])
-        if model["provider"] not in {"offline", "gemini"}:
+        if model["provider"] not in {"offline", "gemini", "openrouter"}:
             raise ValueError("Unknown provider")
         if not isinstance(model["model"], str) or not model["model"].strip():
             raise ValueError("An explicit model version is required")

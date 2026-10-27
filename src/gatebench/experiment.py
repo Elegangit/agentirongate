@@ -56,7 +56,7 @@ def run_experiment(root, cfg, dataset, output, *, allow_network=False, provider_
     providers = {m["provider"] for m in cfg["models"]}
     if len(providers) > 1:
         raise ValueError("Do not mix offline and live providers in one run")
-    live = "gemini" in providers
+    live = bool(providers - {"offline"})
     if live and not allow_network:
         raise ValueError("Live requests require --allow-network")
     if live and cfg["max_api_calls"] == 0:
