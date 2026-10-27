@@ -1,10 +1,15 @@
-"""Gemini and offline adapters. Keep Gemini's thought signatures intact."""
+"""Gemini, OpenRouter and offline adapters. Keep Gemini's thought signatures intact.
+
+Histories use Gemini's native parts; OpenRouter turns are translated in both directions.
+"""
 
 from copy import deepcopy
 from dataclasses import dataclass, field
+import json
 import os
 import time
 from urllib.parse import quote
+import uuid
 
 from .tasks import system_prompt
 
@@ -179,7 +184,150 @@ class GeminiProvider:
                     model_version=data.get("modelVersion"), finish_reason=finish)
 
 
+class OpenRouterProvider:
+    """OpenAI-compatible chat completions through OpenRouter, recorded as Gemini-style parts."""
+
+    URL = "https://openrouter.ai/api/v1/chat/completions"
+
+    def __init__(self, task, config, budget, *, allow_network=False, client=None):
+        if not allow_network:
+            raise ProviderError("Live requests require --allow-network")
+        if "REPLACE" in config["model"]:
+            raise ProviderError("Set an available OpenRouter model ID in the config first")
+        self.key = os.environ.get("OPENROUTER_API_KEY")
+        if not self.key:
+            raise ProviderError("Set OPENROUTER_API_KEY in your shell")
+        if client is None:
+            import httpx
+            client = httpx.Client(timeout=60, follow_redirects=False)
+        self.client = client
+        self.config, self.budget, self.system = config, budget, system_prompt(task)
+
+    def close(self):
+        self.client.close()
+
+    @staticmethod
+    def messages(system, history):
+        out = [{"role": "system", "content": system}]
+        for message in history:
+            parts = message["parts"]
+            if message["role"] == "model":
+                text = "".join(p["text"] for p in parts if "text" in p and not p.get("thought", False))
+                calls = [{"id": p["functionCall"]["id"], "type": "function",
+                          "function": {"name": p["functionCall"]["name"],
+                                       "arguments": json.dumps(p["functionCall"].get("args", {}))}}
+                         for p in parts if "functionCall" in p]
+                entry = {"role": "assistant", "content": text or None}
+                if calls:
+                    entry["tool_calls"] = calls
+                out.append(entry)
+                continue
+            for part in parts:
+                if "functionResponse" in part:
+                    response = part["functionResponse"]
+                    out.append({"role": "tool", "tool_call_id": response["id"],
+                                "content": json.dumps(response["response"])})
+                elif "text" in part:
+                    out.append({"role": "user", "content": part["text"]})
+        return out
+
+    def next_turn(self, history):
+        self.budget.take()
+        payload = {"model": self.config["model"], "messages": self.messages(self.system, history),
+                   "tools": [{"type": "function", "function": t} for t in TOOLS],
+                   "temperature": self.config["temperature"],
+                   "max_tokens": self.config["max_output_tokens"],
+                   # Never route to a backend that silently drops tools or sampling settings.
+                   "provider": {"require_parameters": True}}
+        start = time.perf_counter()
+        try:
+            response = self.client.post(self.URL, json=payload,
+                                        headers={"Authorization": f"Bearer {self.key}"})
+        except Exception:
+            # Don't expose credentials from transport errors.
+            raise ProviderError("OpenRouter transport failure; no automatic retry") from None
+        if response.status_code != 200:
+            raise ProviderError(f"OpenRouter HTTP {response.status_code}; no automatic retry")
+        try:
+            data = response.json()
+        except ValueError:
+            raise ProviderError("Malformed OpenRouter response") from None
+        if not isinstance(data, dict) or "error" in data:
+            raise ProviderError("OpenRouter reported an upstream error; no automatic retry")
+        try:
+            turn = self.parse(data)
+        except (ValueError, KeyError, TypeError, IndexError, AttributeError):
+            raise ProviderError("Malformed OpenRouter response") from None
+        turn.latency = time.perf_counter() - start
+        return turn
+
+    @staticmethod
+    def parse(data):
+        choice = data["choices"][0]
+        if choice.get("error"):
+            raise ValueError("Upstream error in choice")
+        finish = choice.get("finish_reason")
+        message = choice["message"]
+        usage = deepcopy(data.get("usage", {}))
+        # The backend is part of the identifier so mixed routing is flagged by the version audit.
+        version = data.get("model")
+        if version and data.get("provider"):
+            version = f"{version}@{data['provider']}"
+        parts = []
+        reasoning = message.get("reasoning")
+        if isinstance(reasoning, str) and reasoning.strip():
+            parts.append({"text": reasoning, "thought": True})
+        content = message.get("content")
+        if content is not None and not isinstance(content, str):
+            raise ValueError("Invalid response text")
+        if content:
+            parts.append({"text": content})
+        calls, ids, malformed = [], set(), False
+        for raw in message.get("tool_calls") or []:
+            function = raw["function"]
+            if raw.get("type", "function") != "function" or not isinstance(function["name"], str):
+                raise ValueError("Invalid function call")
+            call_id = raw.get("id") or f"call-{uuid.uuid4().hex}"
+            if not isinstance(call_id, str) or call_id in ids:
+                raise ValueError("Duplicate or invalid call ID")
+            ids.add(call_id)
+            try:
+                args = json.loads(function.get("arguments") or "{}")
+            except (TypeError, ValueError):
+                args = None
+            if not isinstance(args, dict):
+                # Keep the raw text as evidence, outside functionCall so it is never executed.
+                malformed = True
+                parts.append({"malformedFunctionCall": {"id": call_id, "name": function["name"],
+                                                        "arguments": function.get("arguments")}})
+                continue
+            call = {"name": function["name"], "args": args, "id": call_id}
+            calls.append(deepcopy(call))
+            parts.append({"functionCall": call})
+        content = {"role": "model", "parts": parts}
+        if finish not in {"stop", "tool_calls"}:
+            if finish == "length":
+                termination = "output_limit"
+            elif finish == "content_filter":
+                termination = "refusal"
+            else:
+                termination = "provider_stop:" + str(finish)
+            return Turn(content, termination=termination, usage=usage,
+                        model_version=version, finish_reason=finish)
+        if malformed:
+            return Turn(content, termination="invalid_call", usage=usage,
+                        model_version=version, finish_reason=finish)
+        if not any(not p.get("thought", False) for p in parts):
+            return Turn(content, termination="empty_response", usage=usage,
+                        model_version=version, finish_reason=finish)
+        return Turn(content, calls, None if calls else "finished", usage,
+                    model_version=version, finish_reason=finish)
+
+
+LIVE_PROVIDERS = {"gemini": GeminiProvider, "openrouter": OpenRouterProvider}
+
+
 def make_provider(task, config, budget, allow_network=False):
     if config["provider"] == "offline":
         return OfflineProvider(task)
-    return GeminiProvider(task, config, budget, allow_network=allow_network)
+    return LIVE_PROVIDERS[config["provider"]](task, config, budget, allow_network=allow_network)
